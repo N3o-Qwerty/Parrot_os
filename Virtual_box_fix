@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Check for root privileges
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run with sudo: sudo ./vbfix"
+  exit
+fi
+
+echo "--- Preparing System for VirtualBox ---"
+
+# 1. Identify CPU and unload KVM modules
+if grep -q vmx /proc/cpuinfo; then
+    echo "[+] Intel CPU detected. Unloading kvm_intel..."
+    modprobe -r kvm_intel
+elif grep -q svm /proc/cpuinfo; then
+    echo "[+] AMD CPU detected. Unloading kvm_amd..."
+    modprobe -r kvm_amd
+fi
+
+# Unload the base KVM module
+echo "[+] Unloading base kvm module..."
+modprobe -r kvm
+
+# 2. Restart VirtualBox services just to be sure
+echo "[+] Refreshing VirtualBox kernel drivers..."
+/sbin/vboxconfig
+
+echo "--- Done! You can now start VirtualBox. ---"
