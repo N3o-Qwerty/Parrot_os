@@ -160,11 +160,17 @@ reload_kvm() {
 
     log_step "Reloading KVM modules..."
 
-    modprobe kvm
+    if ! modprobe kvm; then
+        log_error "Failed to load base kvm module."
+        exit 1
+    fi
     log_info "Base kvm module loaded."
 
     if [[ -n "${KVM_MODULE}" ]]; then
-        modprobe "${KVM_MODULE}"
+        if ! modprobe "${KVM_MODULE}"; then
+            log_error "Failed to load ${KVM_MODULE}."
+            exit 1
+        fi
         log_info "${KVM_MODULE} loaded."
     else
         log_warn "Could not detect CPU vendor -- loaded base kvm only."
